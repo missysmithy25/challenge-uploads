@@ -1,0 +1,153 @@
+Sub stocks():
+
+'set variables
+Dim total As Double
+Dim name As String
+Dim summaryrow As Integer
+Dim open_date As Double
+Dim close_price As Double
+Dim index As Integer
+'Dim find_nonzero As Integer
+summaryrow = 2
+
+
+'loop through the worksheets
+For Each ws In Worksheets
+    total = 0
+    summaryrow = 2
+    index = 2
+    k = 2
+    j = 2
+ 
+   
+   
+    'add  columns for the ticker, Yearly Change, Percent Change, Total Stock Volume
+    'and add names to each of those columns
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("I1").EntireColumn.AutoFit
+    ws.Range("j1").Value = "Yearly Change"
+    ws.Range("j1").EntireColumn.AutoFit
+    ws.Range("k1").Value = "Percent Change"
+    ws.Range("k1").EntireColumn.AutoFit
+    ws.Range("l1").Value = "Total Stock Volume"
+    ws.Range("l1").EntireColumn.AutoFit
+    ws.Range("P1").Value = "Ticker"
+    ws.Range("P1").EntireColumn.AutoFit
+    ws.Range("Q1").Value = "Value"
+    ws.Range("O2").Value = "Greatest % Increase"
+    ws.Range("O2").EntireColumn.AutoFit
+    ws.Range("O3").Value = "Greatest % Decrease"
+    ws.Range("O3").EntireColumn.AutoFit
+    ws.Range("O4").Value = "Greatest Total Volume"
+    ws.Range("O4").EntireColumn.AutoFit
+
+    'determine the last row
+     lastrow = Cells(Rows.Count, "A").End(xlUp).Row
+     
+     
+
+
+   
+     For i = 2 To lastrow
+        If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then  'most restricting condition first   '1
+       
+            name = ws.Cells(i, 1).Value
+           
+            ws.Cells(summaryrow, 9).Value = name
+            ws.Cells(summaryrow, 12).Value = total
+           
+            close_price = ws.Cells(i, 6).Value 'closing price
+            ws.Cells(summaryrow, 10).Value = close_price
+           
+            If total = 0 Then '2
+                ws.Cells(summaryrow, 10).Value = 0 'Yearly Change
+                ws.Cells(summaryrow, 11).Value = 0 'Percent Change
+           
+            Else
+                If ws.Cells(index, 3) = 0 Then '3
+                    For k = index To i
+                        If ws.Cells(k, 3).Value <> 0 Then '4
+                             index = k
+                             Exit For
+                        End If                            '4
+                       
+                    Next k
+                End If                          '3
+               
+           yearly_change = (ws.Cells(i, 6).Value - ws.Cells(index, 3))
+         
+           ws.Cells(summaryrow, 10).Value = yearly_change   'yearly change J
+                If ws.Cells(index, 3) = 0 Then                    '5
+                    ws.Cells(summaryrow, 11).Value = 0
+                Else
+                   percent_change = yearly_change / ws.Cells(index, 3)
+                   ws.Cells(summaryrow, 11).Value = percent_change
+                End If                                             '5
+               
+                 ws.Cells(summaryrow, 11).NumberFormat = "0.00%"
+                       
+           index = 1 + i
+           
+        If yearly_change > 0 Then
+            ws.Range("J" & j).Interior.ColorIndex = 4
+        ElseIf yearly_change < 0 Then
+                ws.Range("J" & j).Interior.ColorIndex = 3
+        Else
+                ws.Range("J" & j).Interior.ColorIndex = 0
+        End If
+           
+        End If '2
+            summaryrow = summaryrow + 1
+            total = 0
+            j = j + 1
+                       
+        Else
+             total = total + ws.Cells(i, 7).Value
+
+     
+        End If                                                          '1
+ 
+    Next i
+   
+   
+     ws.Range("Q2") = WorksheetFunction.Max(ws.Range("K2:K" & lastrow))
+     ws.Range("Q3") = WorksheetFunction.Min(ws.Range("K2:K" & lastrow))
+     ws.Range("Q4") = WorksheetFunction.Max(ws.Range("l2:l" & lastrow))
+     ws.Range("Q2:Q3").NumberFormat = "0.00%"
+     
+    Dim sourcecolumn As Range
+    Dim destinationcolumn As Range
+   
+    Set sourcecolumn = ws.Range("K1:K" & lastrow)
+    Set destinationcolumn = ws.Range("H1:H" & lastrow)
+   
+   
+    sourcecolumn.Copy
+   
+    destinationcolumn.PasteSpecial xlPasteValues
+    ws.Range("H1:H" & lastrow).NumberFormat = "0.00%"
+   
+   
+    'applying vlookup
+    ws.Range("P2") = ws.Application.VLookup(WorksheetFunction.Max(ws.Range("H2:H" & lastrow)), ws.Range("H2:I" & lastrow), 2, False)
+    ws.Range("P3") = ws.Application.VLookup(WorksheetFunction.Min(ws.Range("H2:H" & lastrow)), ws.Range("H2:I" & lastrow), 2, False)
+    'deleting H column
+    ws.Range("H1:H" & lastrow).Value = ""
+   
+    Dim sourcecolumn_vol As Range
+    Dim destinationcolumn_vol As Range
+   
+    Set sourcecolumn_vol = ws.Range("L1:L" & lastrow)
+    Set destinationcolumn_vol = ws.Range("H1:H" & lastrow)
+   
+    sourcecolumn_vol.Copy
+    destinationcolumn_vol.PasteSpecial xlPasteValues
+    'applying vlookup
+   
+    ws.Range("P4") = ws.Application.VLookup(WorksheetFunction.Max(ws.Range("l2:l" & lastrow)), ws.Range("H2:I" & lastrow), 2, False)
+    ws.Range("H1:H" & lastrow).Value = ""
+    ws.Range("Q1").EntireColumn.AutoFit
+   
+
+Next ws
+End Sub
